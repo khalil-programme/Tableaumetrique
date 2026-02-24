@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau Métrique Interactif</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 1000px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        
+        .section-title {
+            text-align: center;
+            color: #333;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .tableau-container {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #e0e0e0;
+            margin-bottom: 30px;
+        }
+        
+        .notification {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ff6b6b;
+            color: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            box-shadow: 0 5px 20px rgba(255, 107, 107, 0.4);
+            z-index: 1000;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from {
+                transform: translateX(-50%) translateY(-30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(-50%) translateY(-30px);
+                opacity: 0;
+            }
+        }
+        
+        .notification.hide {
+            animation: slideUp 0.3s ease-in;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        th {
+            padding: 15px;
+            text-align: center;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            border: 2px solid #ddd;
+        }
+        
+        td {
+            padding: 15px;
+            text-align: center;
+            border: 2px solid #ddd;
+            height: 60px;
+        }
+        
+        .unit-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .unit-symbol {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        input[type="number"] {
+            width: 100%;
+            height: 100%;
+            border: none;
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+        
+        input[type="number"]:focus {
+            outline: none;
+            background: #e3f2fd;
+            box-shadow: inset 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+        
+        input[type="number"]:not(:placeholder-shown) {
+            background: #e8f5e9;
+        }
+        
+        /* Couleurs pour Longueurs */
+        .km { color: #2d5016; }
+        .hm { color: #7cb342; }
+        .dam { color: #17a2b8; }
+        .m { color: #dc3545; }
+        .dm { color: #0052cc; }
+        .cm { color: #00bcd4; }
+        .mm { color: #90caf9; }
+        
+        /* Couleurs pour Masses */
+        .kg { color: #2d5016; }
+        .hg { color: #7cb342; }
+        .dag { color: #17a2b8; }
+        .g { color: #dc3545; }
+        .dg { color: #0052cc; }
+        .cg { color: #00bcd4; }
+        .mg { color: #90caf9; }
+        
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+        
+        button {
+            padding: 12px 30px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        .btn-clear {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .btn-clear:hover {
+            background: #ee5a52;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="notification" id="notification">UN SEUL CHIFFRE PAR CASE</div>
+    
+    <div class="container">
+        <h1>📏 Tableau Métrique Complet</h1>
+        
+        <!-- SECTION LONGUEURS -->
+        <div class="section-title">📐 Longueurs (Mètres)</div>
+        <div class="tableau-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>
+                            <div class="unit-label">kilomètre</div>
+                            <div class="unit-symbol km">km</div>
+                        </th>
+                        <th>
+                            <div class="unit-label">hectomètre</div>
+                            <div class="unit-symbol hm">hm</div>
+                        </th>
+                        <th>
+                            <div class="unit-label">décamètre</div>
+                            <div class="unit-symbol dam">dam</div>
+                        </th>
+                        <th>
+                            <div class="unit-label">mètre</div>
+                            <div class="unit-symbol m">m</div>
+                        </th>
+                        <th>
+                            <div class="unit-label">décimètre</div>
+                            <div class="unit-symbol dm">dm</div>
+                        </th>
+                        <th>
+                            <div class="unit-label">centimètre</div>
+                            <div class="unit-symbol cm">cm</div>
+                        </th>
+                        <th>
+                            <div class="unit-label">millimètre</div>
+                            <div class="unit-symbol mm">mm</div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="number" class="metric-input" min="0" max="9" inputmode="numeric"></td>
+                        <td><input type="number" class="metric-input" min="0" max="9" inputmode="numeric"></td>
+                        <td><input type="number" class="metric-input" min="0" max="9" inputmode="numeric"></td>
+                        <td><input type="number" class="metric-input" min="0" max="9" inputmode="numeric"></td>
+                        <td><input type="number" class="metric-input" min="0" max="9" inputmode="numeric"></td>
+                        <td><input type="number" class="metric-input" min="0" max="9" inputmode="numeric"></td>
+                        <td><input type="number" class="metric-input" min="0" max="9" inputmode="numeric"></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="buttons">
+                <button class="btn-clear" onclick="clearTableLongueurs()">🗑️ Effacer</button>
+            </div>
+        </div>
+        
+        <!-- SECTION MASSES -->
+        <div class="section-title">⚖️ Masses (Grammes)</div>
+        <div class="tableau-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>
+                            <div class="unit-label">kilogramme</div>
+                            <div class="unit-symbol kg">kg</div>
+                        </th>
+                        <th>
+                            <div class="unit-label">hectogramme</div>
+                            <div class="unit-symbol hg">hg</div>
+                        </th>
+                        <th>
+                            <div class="unit-label">décagramme</div>
+                            <div class="unit-symbol dag">dag</div>
+                        </th>
+                        <th>
+                            <div class="unit-label">gramme</div>
+                            <div class="unit-symbol g">g</div>
+                        </th>
+                        <th>
+                            <div class="unit-label">décigramme</div>
+                            <div class="unit-symbol dg">dg</div>
+                        </th>
+                        <th>
+                            <div class="unit-label">centigramme</div>
+                            <div class="unit-symbol cg">cg</div>
+                        </th>
+                        <th>
+                            <div class="unit-label">milligramme</div>
+                            <div class="unit-symbol mg">mg</div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="number" class="metric-input-masses" min="0" max="9" inputmode="numeric"></td>
+                        <td><input type="number" class="metric-input-masses" min="0" max="9" inputmode="numeric"></td>
+                        <td><input type="number" class="metric-input-masses" min="0" max="9" inputmode="numeric"></td>
+                        <td><input type="number" class="metric-input-masses" min="0" max="9" inputmode="numeric"></td>
+                        <td><input type="number" class="metric-input-masses" min="0" max="9" inputmode="numeric"></td>
+                        <td><input type="number" class="metric-input-masses" min="0" max="9" inputmode="numeric"></td>
+                        <td><input type="number" class="metric-input-masses" min="0" max="9" inputmode="numeric"></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="buttons">
+                <button class="btn-clear" onclick="clearTableMasses()">🗑️ Effacer</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const longueurInputs = document.querySelectorAll('.metric-input');
+        const massesInputs = document.querySelectorAll('.metric-input-masses');
+        const notification = document.getElementById('notification');
+        
+        // Ajouter les écouteurs pour les longueurs
+        longueurInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => handleInput(e, longueurInputs, index));
+            input.addEventListener('keydown', (e) => handleKeydown(e, longueurInputs, index));
+        });
+        
+        // Ajouter les écouteurs pour les masses
+        massesInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => handleInput(e, massesInputs, index));
+            input.addEventListener('keydown', (e) => handleKeydown(e, massesInputs, index));
+        });
+        
+        function handleInput(e, inputsArray, currentIndex) {
+            const input = e.target;
+            
+            // Limiter à 1 chiffre
+            if (input.value.length > 1) {
+                input.value = input.value.slice(0, 1);
+                showNotification();
+                return;
+            }
+            
+            // Vérifier que c'est un chiffre
+            if (input.value && !/^\d$/.test(input.value)) {
+                input.value = '';
+                showNotification();
+                return;
+            }
+            
+            // Passer à la case suivante automatiquement
+            if (input.value && /^\d$/.test(input.value)) {
+                if (currentIndex < inputsArray.length - 1) {
+                    inputsArray[currentIndex + 1].focus();
+                }
+            }
+        }
+        
+        function handleKeydown(e, inputsArray, currentIndex) {
+            // Retour arrière : revenir à la case précédente
+            if (e.key === 'Backspace' && inputsArray[currentIndex].value === '') {
+                if (currentIndex > 0) {
+                    inputsArray[currentIndex - 1].focus();
+                    inputsArray[currentIndex - 1].value = '';
+                }
+            }
+            
+            // Touche droite : aller à la case suivante
+            if (e.key === 'ArrowRight' && currentIndex < inputsArray.length - 1) {
+                inputsArray[currentIndex + 1].focus();
+            }
+            
+            // Touche gauche : aller à la case précédente
+            if (e.key === 'ArrowLeft' && currentIndex > 0) {
+                inputsArray[currentIndex - 1].focus();
+            }
+        }
+        
+        function showNotification() {
+            notification.style.display = 'block';
+            notification.classList.remove('hide');
+            
+            setTimeout(() => {
+                notification.classList.add('hide');
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 300);
+            }, 2000);
+        }
+        
+        function clearTableLongueurs() {
+            longueurInputs.forEach(input => input.value = '');
+            longueurInputs[0].focus();
+        }
+        
+        function clearTableMasses() {
+            massesInputs.forEach(input => input.value = '');
+            massesInputs[0].focus();
+        }
+    </script>
+</body>
+</html>
