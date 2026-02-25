@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convertisseur de Longueurs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            font-size: 3.5em;
+            margin-bottom: 50px;
+            text-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .converters-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        @media (max-width: 1024px) {
+            .converters-wrapper {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+        }
+        
+        .converter-card {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: visible;
+        }
+        
+        .converter-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+            animation: slideRight 3s infinite;
+        }
+        
+        @keyframes slideRight {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+        }
+        
+        .converter-card h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 1.8em;
+        }
+        
+        .converter-card h2 span {
+            font-size: 2em;
+            margin-right: 10px;
+        }
+        
+        .unit-button-wrapper {
+            position: relative;
+            margin-bottom: 25px;
+            z-index: 10;
+        }
+        
+        .unit-button {
+            width: 100%;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .unit-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .unit-button:hover::before {
+            left: 100%;
+        }
+        
+        .unit-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+        
+        .unit-button:active {
+            transform: translateY(-1px);
+        }
+        
+        .unit-dropdown {
+            display: none;
+            position: fixed;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+            z-index: 1000;
+            overflow: hidden;
+            animation: slideDown 0.3s ease;
+            max-height: 70vh;
+            width: 300px;
+            overflow-y: auto;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .unit-dropdown.active {
+            display: block;
+        }
+        
+        .unit-category {
+            padding: 10px 0;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .unit-category:last-child {
+            border-bottom: none;
+        }
+        
+        .category-title {
+            padding: 8px 20px;
+            font-weight: 700;
+            color: #667eea;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: #f5f5f5;
+            position: sticky;
+            top: 0;
+            z-index: 1001;
+        }
+        
+        .unit-option {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .unit-option:hover {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            padding-left: 30px;
+        }
+        
+        .unit-option.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 700;
+        }
+        
+        .unit-option.disabled {
+            color: #ccc;
+            cursor: not-allowed;
+            background: #f5f5f5;
+        }
+        
+        .unit-option.disabled:hover {
+            background: #f5f5f5;
+            padding-left: 20px;
+        }
+        
+        .unit-symbol {
+            font-size: 0.9em;
+            opacity: 0.7;
+            margin-left: 10px;
+        }
+        
+        .selected-unit {
+            background: linear-gradient(135deg, #f093fb15 0%, #667eea15 100%);
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+            color: #667eea;
+            border-left: 4px solid #667eea;
+        }
+        
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .input-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 18px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: 600;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+        
+        .input-field::placeholder {
+            color: #bbb;
+        }
+        
+        .input-field[readonly] {
+            background: #f0f0f0;
+            cursor: not-allowed;
+        }
+        
+        .reset-button {
+            margin-top: 25px;
+            padding: 12px 30px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            font-size: 1em;
+        }
+        
+        .reset-button:hover {
+            background: #ff5252;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
+        
+        .swap-button {
+            position: absolute;
+            right: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: 3px solid white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 1.5em;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        @media (max-width: 1024px) {
+            .swap-button {
+                display: none;
+            }
+        }
+        
+        .swap-button:hover {
+            transform: translateY(-50%) rotate(180deg) scale(1.1);
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 50px;
+            font-size: 0.95em;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📏 Convertisseur de Longueurs et Masses</h1>
+        
+        <div class="converters-wrapper">
+            <!-- CONVERTISSEUR 1 -->
+            <div class="converter-card">
+                <h2><span>📊</span> Unité Source</h2>
+                
+                <div class="unit-button-wrapper">
+                    <button class="unit-button" id="btn-unite1">Choisir une unité</button>
+                    <div class="unit-dropdown" id="dropdown1">
+                        <!-- LONGUEURS -->
+                        <div class="unit-category">
+                            <div class="category-title">📏 Longueurs</div>
+                            <div class="unit-option" onclick="selectUnit(this, 1)">
+                                <span>Kilomètre</span>
+                                <span class="unit-symbol">km</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 1)">
+                                <span>Hectomètre</span>
+                                <span class="unit-symbol">hm</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 1)">
+                                <span>Décamètre</span>
+                                <span class="unit-symbol">dam</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 1)">
+                                <span>Mètre</span>
+                                <span class="unit-symbol">m</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 1)">
+                                <span>Décimètre</span>
+                                <span class="unit-symbol">dm</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 1)">
+                                <span>Centimètre</span>
+                                <span class="unit-symbol">cm</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 1)">
+                                <span>Millimètre</span>
+                                <span class="unit-symbol">mm</span>
+                            </div>
+                        </div>
+                        
+                        <!-- MASSES -->
+                        <div class="unit-category">
+                            <div class="category-title">⚖️ Masses</div>
+                            <div class="unit-option" onclick="selectUnit(this, 1)">
+                                <span>Kilogramme</span>
+                                <span class="unit-symbol">kg</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 1)">
+                                <span>Hectogramme</span>
+                                <span class="unit-symbol">hg</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 1)">
+                                <span>Décagramme</span>
+                                <span class="unit-symbol">dag</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 1)">
+                                <span>Gramme</span>
+                                <span class="unit-symbol">g</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 1)">
+                                <span>Décigramme</span>
+                                <span class="unit-symbol">dg</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 1)">
+                                <span>Centigramme</span>
+                                <span class="unit-symbol">cg</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 1)">
+                                <span>Milligramme</span>
+                                <span class="unit-symbol">mg</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="selected-unit" id="selected1">Aucune unité sélectionnée</div>
+                
+                <div class="input-wrapper">
+                    <label class="input-label">Entrez votre nombre:</label>
+                    <input type="number" class="input-field" id="input1" placeholder="0" inputmode="numeric">
+                </div>
+                
+                <button class="reset-button" onclick="reset(1)">🗑️ Réinitialiser</button>
+            </div>
+            
+            <div class="swap-button" onclick="swapConverters()">⇄</div>
+            
+            <!-- CONVERTISSEUR 2 -->
+            <div class="converter-card">
+                <h2><span>🎯</span> Unité Cible</h2>
+                
+                <div class="unit-button-wrapper">
+                    <button class="unit-button" id="btn-unite2">Choisir une unité</button>
+                    <div class="unit-dropdown" id="dropdown2">
+                        <!-- LONGUEURS -->
+                        <div class="unit-category">
+                            <div class="category-title">📏 Longueurs</div>
+                            <div class="unit-option" onclick="selectUnit(this, 2)">
+                                <span>Kilomètre</span>
+                                <span class="unit-symbol">km</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 2)">
+                                <span>Hectomètre</span>
+                                <span class="unit-symbol">hm</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 2)">
+                                <span>Décamètre</span>
+                                <span class="unit-symbol">dam</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 2)">
+                                <span>Mètre</span>
+                                <span class="unit-symbol">m</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 2)">
+                                <span>Décimètre</span>
+                                <span class="unit-symbol">dm</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 2)">
+                                <span>Centimètre</span>
+                                <span class="unit-symbol">cm</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 2)">
+                                <span>Millimètre</span>
+                                <span class="unit-symbol">mm</span>
+                            </div>
+                        </div>
+                        
+                        <!-- MASSES -->
+                        <div class="unit-category">
+                            <div class="category-title">⚖️ Masses</div>
+                            <div class="unit-option" onclick="selectUnit(this, 2)">
+                                <span>Kilogramme</span>
+                                <span class="unit-symbol">kg</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 2)">
+                                <span>Hectogramme</span>
+                                <span class="unit-symbol">hg</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 2)">
+                                <span>Décagramme</span>
+                                <span class="unit-symbol">dag</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 2)">
+                                <span>Gramme</span>
+                                <span class="unit-symbol">g</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 2)">
+                                <span>Décigramme</span>
+                                <span class="unit-symbol">dg</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 2)">
+                                <span>Centigramme</span>
+                                <span class="unit-symbol">cg</span>
+                            </div>
+                            <div class="unit-option" onclick="selectUnit(this, 2)">
+                                <span>Milligramme</span>
+                                <span class="unit-symbol">mg</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="selected-unit" id="selected2">Aucune unité sélectionnée</div>
+                
+                <div class="input-wrapper">
+                    <label class="input-label">Résultat:</label>
+                    <input type="number" class="input-field" id="input2" placeholder="0" readonly>
+                </div>
+                
+                <button class="reset-button" onclick="reset(2)">🗑️ Réinitialiser</button>
+            </div>
+        </div>
+        
+        <div class="footer">
+            💡 Sélectionnez les unités et entrez votre nombre pour convertir automatiquement
+        </div>
+    </div>
+    
+    <script>
+        // Types d'unités
+        const longueurs = ['km', 'hm', 'dam', 'm', 'dm', 'cm', 'mm'];
+        const masses = ['kg', 'hg', 'dag', 'g', 'dg', 'cg', 'mg'];
+        
+        // Tableau de conversion (tout en millimètres ou milligrammes)
+        const conversions = {
+            'km': 1000000000,
+            'hm': 100000000,
+            'dam': 10000000,
+            'm': 1000000,
+            'dm': 100000,
+            'cm': 10000,
+            'mm': 1000,
+            'kg': 1000000000,
+            'hg': 100000000,
+            'dag': 10000000,
+            'g': 1000000,
+            'dg': 100000,
+            'cg': 10000,
+            'mg': 1000
+        };
+        
+        const fullNames = {
+            'km': 'Kilomètre',
+            'hm': 'Hectomètre',
+            'dam': 'Décamètre',
+            'm': 'Mètre',
+            'dm': 'Décimètre',
+            'cm': 'Centimètre',
+            'mm': 'Millimètre',
+            'kg': 'Kilogramme',
+            'hg': 'Hectogramme',
+            'dag': 'Décagramme',
+            'g': 'Gramme',
+            'dg': 'Décigramme',
+            'cg': 'Centigramme',
+            'mg': 'Milligramme'
+        };
+        
+        let selected1 = null;
+        let selected2 = null;
+        
+        // Positionner le dropdown correctement
+        function positionDropdown(buttonId, dropdownId) {
+            const button = document.getElementById(buttonId);
+            const dropdown = document.getElementById(dropdownId);
+            const rect = button.getBoundingClientRect();
+            
+            dropdown.style.left = rect.left + 'px';
+            dropdown.style.top = (rect.bottom + 10) + 'px';
+        }
+        
+        // Ouvrir/fermer les dropdowns
+        document.getElementById('btn-unite1').addEventListener('click', function() {
+            const dropdown = document.getElementById('dropdown1');
+            dropdown.classList.toggle('active');
+            if (dropdown.classList.contains('active')) {
+                positionDropdown('btn-unite1', 'dropdown1');
+            }
+            document.getElementById('dropdown2').classList.remove('active');
+        });
+        
+        document.getElementById('btn-unite2').addEventListener('click', function() {
+            const dropdown = document.getElementById('dropdown2');
+            dropdown.classList.toggle('active');
+            if (dropdown.classList.contains('active')) {
+                positionDropdown('btn-unite2', 'dropdown2');
+            }
+            document.getElementById('dropdown1').classList.remove('active');
+        });
+        
+        // Fermer les dropdowns en cliquant ailleurs
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.unit-button-wrapper')) {
+                document.getElementById('dropdown1').classList.remove('active');
+                document.getElementById('dropdown2').classList.remove('active');
+            }
+        });
+        
+        // Mettre à jour les unités disponibles selon le type choisi
+        function updateAvailableUnits() {
+            const categories1 = document.querySelectorAll('#dropdown1 .unit-category');
+            const categories2 = document.querySelectorAll('#dropdown2 .unit-category');
+            
+            let type1 = null;
+            if (selected1) {
+                type1 = longueurs.includes(selected1) ? 'longueur' : 'masse';
+            }
+            
+            let type2 = null;
+            if (selected2) {
+                type2 = longueurs.includes(selected2) ? 'longueur' : 'masse';
+            }
+            
+            // Mettre à jour le dropdown 2 basé sur la sélection 1
+            categories2.forEach((category, index) => {
+                const options = category.querySelectorAll('.unit-option');
+                options.forEach(option => {
+                    option.classList.remove('disabled');
+                    
+                    if (type1 === 'longueur' && index === 1) {
+                        option.classList.add('disabled');
+                    } else if (type1 === 'masse' && index === 0) {
+                        option.classList.add('disabled');
+                    }
+                });
+            });
+            
+            // Mettre à jour le dropdown 1 basé sur la sélection 2
+            categories1.forEach((category, index) => {
+                const options = category.querySelectorAll('.unit-option');
+                options.forEach(option => {
+                    option.classList.remove('disabled');
+                    
+                    if (type2 === 'longueur' && index === 1) {
+                        option.classList.add('disabled');
+                    } else if (type2 === 'masse' && index === 0) {
+                        option.classList.add('disabled');
+                    }
+                });
+            });
+        }
+        
+        // Sélectionner une unité
+        function selectUnit(element, converter) {
+            if (element.classList.contains('disabled')) {
+                return;
+            }
+            
+            const options = document.querySelectorAll(`#dropdown${converter} .unit-option`);
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            
+            const fullName = element.querySelector('span').textContent;
+            const unitSymbol = element.querySelector('.unit-symbol').textContent.toLowerCase();
+            
+            if (converter === 1) {
+                selected1 = unitSymbol;
+                document.getElementById('selected1').textContent = `Unité sélectionnée: ${fullName} (${unitSymbol})`;
+                document.getElementById('btn-unite1').textContent = `${unitSymbol.toUpperCase()}`;
+            } else {
+                selected2 = unitSymbol;
+                document.getElementById('selected2').textContent = `Unité sélectionnée: ${fullName} (${unitSymbol})`;
+                document.getElementById('btn-unite2').textContent = `${unitSymbol.toUpperCase()}`;
+            }
+            
+            updateAvailableUnits();
+            document.getElementById(`dropdown${converter}`).classList.remove('active');
+            convert();
+        }
+        
+        // Conversion
+        function convert() {
+            const input1 = parseFloat(document.getElementById('input1').value) || 0;
+            
+            if (!selected1 || !selected2) {
+                document.getElementById('input2').value = '';
+                return;
+            }
+            
+            const type1 = longueurs.includes(selected1) ? 'longueur' : 'masse';
+            const type2 = longueurs.includes(selected2) ? 'longueur' : 'masse';
+            
+            if (type1 !== type2) {
+                document.getElementById('input2').value = 'Incompatible';
+                return;
+            }
+            
+            const valueInBase = input1 * conversions[selected1];
+            const result = valueInBase / conversions[selected2];
+            
+            document.getElementById('input2').value = result.toFixed(6);
+        }
+        
+        document.getElementById('input1').addEventListener('input', convert);
+        
+        function reset(converter) {
+            if (converter === 1) {
+                document.getElementById('input1').value = '';
+                selected1 = null;
+                document.getElementById('selected1').textContent = 'Aucune unité sélectionnée';
+                document.getElementById('btn-unite1').textContent = 'Choisir une unité';
+                document.querySelectorAll('#dropdown1 .unit-option').forEach(opt => opt.classList.remove('selected'));
+            } else {
+                document.getElementById('input2').value = '';
+                selected2 = null;
+                document.getElementById('selected2').textContent = 'Aucune unité sélectionnée';
+                document.getElementById('btn-unite2').textContent = 'Choisir une unité';
+                document.querySelectorAll('#dropdown2 .unit-option').forEach(opt => opt.classList.remove('selected'));
+            }
+            updateAvailableUnits();
+            convert();
+        }
+        
+        function swapConverters() {
+            const temp1 = selected1;
+            
+            selected1 = selected2;
+            selected2 = temp1;
+            
+            document.getElementById('input1').value = document.getElementById('input2').value;
+            
+            if (selected1) {
+                document.getElementById('selected1').textContent = `Unité sélectionnée: ${fullNames[selected1]} (${selected1})`;
+                document.getElementById('btn-unite1').textContent = selected1.toUpperCase();
+            } else {
+                document.getElementById('selected1').textContent = 'Aucune unité sélectionnée';
+                document.getElementById('btn-unite1').textContent = 'Choisir une unité';
+            }
+            
+            if (selected2) {
+                document.getElementById('selected2').textContent = `Unité sélectionnée: ${fullNames[selected2]} (${selected2})`;
+                document.getElementById('btn-unite2').textContent = selected2.toUpperCase();
+            } else {
+                document.getElementById('selected2').textContent = 'Aucune unité sélectionnée';
+                document.getElementById('btn-unite2').textContent = 'Choisir une unité';
+            }
+            
+            updateAvailableUnits();
+            convert();
+        }
+    </script>
+</body>
+</html>
